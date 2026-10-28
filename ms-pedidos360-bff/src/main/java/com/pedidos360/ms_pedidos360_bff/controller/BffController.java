@@ -25,18 +25,13 @@ public class BffController {
 
     @GetMapping("/estado")
     public Map<String, Object> estadoServidor(@AuthenticationPrincipal Jwt jwt) {
-        // Confirmamos que el BFF está vivo y extraemos el nombre del usuario
-        // directamente del token
         return Map.of(
                 "mensaje", "¡El BFF de Pedidos360 está funcionando y seguro!",
                 "usuarioAutenticado",
                 jwt.getClaimAsString("name") != null ? jwt.getClaimAsString("name") : "Usuario Desconocido");
     }
-
-    // --- NUEVO ENDPOINT ---
     @GetMapping("/productos")
     public List<Map<String, Object>> obtenerProductos() {
-        // El BFF llama al ms-catalogo (puerto 8081) y devuelve la lista
         return catalogoClient.obtenerProductos();
     }
 

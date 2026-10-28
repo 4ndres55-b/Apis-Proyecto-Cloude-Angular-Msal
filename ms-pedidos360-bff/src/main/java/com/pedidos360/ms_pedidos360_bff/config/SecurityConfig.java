@@ -32,7 +32,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Permitimos tu Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); 
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); 
-        configuration.setAllowCredentials(true); // 👈 Recomendado si envías cookies o tokens de autorización complejos
+        configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
