@@ -1,42 +1,36 @@
 package com.pedidos360.ms_catalogo.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "productos")
+@Data 
+@NoArgsConstructor 
+@AllArgsConstructor 
 public class Producto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column (nullable =false)
     private String nombre;
+
+    @Column (nullable = false)
     private Double precio;
 
-    // Constructores, Getters y Setters
-    public Producto() {
-    }
+    @Column (nullable = false)
+    private Number stock;
 
-    public Long getId() {
-        return id;
-    }
+    @Column (length = 1000)
+    private String descripcion;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column (nullable = false)
+    private String categoria;
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public Double getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(Double precio) {
-        this.precio = precio;
-    }
+    @Column(name ="url_img")
+    private String urlImg;
 }
