@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "ms-catalogo", url = "http://localhost:8081")
+@FeignClient(name = "ms-catalogo", url = "${catalogo.service.url}")
 public interface CatalogoClient {
 
     @GetMapping("/api/productos")
