@@ -16,15 +16,24 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(Customizer.withDefaults())
+            .csrf(csrf -> csrf.disable())   
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
+        return http.build();
+    }
+
+    @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Permitimos tu Angular
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // OPTIONS es clave
-                                                                                                   // para que Angular
-                                                                                                   // pregunte si puede
-                                                                                                   // pasar
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); // Permitimos que envíe el
-                                                                                         // Token
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); 
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); 
+        configuration.setAllowCredentials(true); // 👈 Recomendado si envías cookies o tokens de autorización complejos
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
