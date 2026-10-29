@@ -9,9 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -33,9 +31,23 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.productoPorId(id));
     }
 
-    @PostMapping(value = "/guardar", consumes= {"multipart/form-data"})
-    public ResponseEntity<Producto> guardarProducto(@RequestBody Producto productoIngr, @RequestParam(value="imagen", required = false) MultipartFile image) {
-        Producto nuevoProducto = productoService.guardarProducto(productoIngr, image);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<Producto> guardarProducto(
+            @RequestParam("nombre") String nombre,
+            @RequestParam("stock") Integer stock,
+            @RequestParam("precio") Double precio,
+            @RequestParam("descripcion") String descripcion,
+            @RequestParam("categoria") String categoria,
+            @RequestParam(value = "imagen", required = false) MultipartFile imagen) {
+
+        Producto productoIngr = new Producto();
+        productoIngr.setNombre(nombre);
+        productoIngr.setStock(stock);
+        productoIngr.setPrecio(precio);
+        productoIngr.setDescripcion(descripcion);
+        productoIngr.setCategoria(categoria);
+
+        Producto nuevoProducto = productoService.guardarProducto(productoIngr, imagen);
         return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
     }
     

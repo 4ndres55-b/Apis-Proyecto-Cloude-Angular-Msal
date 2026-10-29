@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +33,7 @@ public class ProductoService {
         return productoRepository.findById(id).orElseThrow(()-> new RuntimeException("Producto No Encontrado"));
     }
 
-    public Producto guardarProducto(Producto productoIngr, MultipartFile imagen){
+    public Producto guardarProducto(@RequestBody Producto productoIngr, MultipartFile imagen){
         String imagenUrl = null;
         if(imagen != null && !imagen.isEmpty()){
             try{
@@ -44,7 +43,6 @@ public class ProductoService {
                 }
                 String nombreImg= UUID.randomUUID().toString()+ "_" + imagen.getOriginalFilename();
                 Path direccionArchivo = direccionSubidaImg.resolve(nombreImg);
-                Files.copy(imagen.getInputStream(), direccionArchivo, StandardCopyOption.REPLACE_EXISTING);
                 imagenUrl = "/uploads/" + nombreImg;
             }
             catch(IOException e)
@@ -55,7 +53,7 @@ public class ProductoService {
         Producto producto = new Producto();
         producto.setNombre(productoIngr.getNombre());
         producto.setPrecio(productoIngr.getPrecio());
-        producto.setCategoria(productoIngr.getDescripcion());
+        producto.setDescripcion(productoIngr.getDescripcion()); // <-- ¡Corregido aquí!
         producto.setCategoria(productoIngr.getCategoria());
         producto.setStock(productoIngr.getStock());
         producto.setUrlImg(imagenUrl);
