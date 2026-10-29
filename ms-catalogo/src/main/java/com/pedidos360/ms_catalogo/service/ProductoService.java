@@ -53,7 +53,7 @@ public class ProductoService {
         Producto producto = new Producto();
         producto.setNombre(productoIngr.getNombre());
         producto.setPrecio(productoIngr.getPrecio());
-        producto.setDescripcion(productoIngr.getDescripcion()); // <-- ¡Corregido aquí!
+        producto.setDescripcion(productoIngr.getDescripcion());
         producto.setCategoria(productoIngr.getCategoria());
         producto.setStock(productoIngr.getStock());
         producto.setUrlImg(imagenUrl);
