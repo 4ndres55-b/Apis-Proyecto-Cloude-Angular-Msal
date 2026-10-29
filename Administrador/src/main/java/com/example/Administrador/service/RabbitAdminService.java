@@ -5,24 +5,28 @@ import com.example.Administrador.dto.RespuestaAdminDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueInformation;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * Servicio dedicado para encapsular todas las operaciones de infraestructura de RabbitMQ.
- * Cumple con el criterio de encapsulamiento del administrador (10% de la rúbrica):
- * Los controladores llaman a este servicio de alto nivel sin conocer detalles internos de RabbitMQ.
- */
+
 @Service
+
 public class RabbitAdminService {
+    @Value("${spring.rabbitmq.host:rabbitmq}")
+    private String rabbitmqHost;
 
     private static final Logger logger = LoggerFactory.getLogger(RabbitAdminService.class);
     private final RabbitAdmin rabbitAdmin;
+    
 
     public RabbitAdminService(RabbitAdmin rabbitAdmin) {
         this.rabbitAdmin = rabbitAdmin;
@@ -91,5 +95,23 @@ public class RabbitAdminService {
         }
 
         return resultado;
+    }
+    public List<Map<String, Object>> listarTodasLasColas() {
+        logger.info("Solicitando el listado de todas las colas al broker RabbitMQ");
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor("guest", "guest"));
+            
+            // Usamos la variable inyectada para formar la URL dinámica
+            String url = "http://" + rabbitmqHost + ":15672/api/queues";
+            
+            List<Map<String, Object>> colas = restTemplate.getForObject(url, List.class);
+            logger.info("Se encontraron {} colas en el broker", colas != null ? colas.size() : 0);
+            return colas;
+            
+        } catch (Exception e) {
+            logger.error("Error al obtener el listado de colas desde la API HTTP: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
 }

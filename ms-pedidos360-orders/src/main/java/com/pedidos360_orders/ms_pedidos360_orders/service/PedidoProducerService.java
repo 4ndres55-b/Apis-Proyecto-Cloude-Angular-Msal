@@ -1,61 +1,66 @@
 package com.pedidos360_orders.ms_pedidos360_orders.service;
 
+import com.pedidos360_orders.ms_pedidos360_orders.config.rabbitmq.RabbitMQConfig;
 import com.pedidos360_orders.ms_pedidos360_orders.dto.PedidoMensajeDTO;
-import com.pedidos360_orders.ms_pedidos360_orders.model.Pedido;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-/**
- * Servicio Productor de Mensajería.
- * Cumple con el criterio de Separación de Lógica (10% de la rúbrica):
- * Los controladores y la lógica de base de datos no conocen los detalles
- * de AMQP; solo delegan la publicación de eventos a este servicio especializado.
- */
 @Service
 public class PedidoProducerService {
 
     private static final Logger logger = LoggerFactory.getLogger(PedidoProducerService.class);
-
+    
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${pedidos.rabbitmq.exchange.pedidos}")
-    private String pedidosExchange;
-
-    @Value("${pedidos.rabbitmq.routingkey.cocina}")
-    private String cocinaRoutingKey;
-
-    @Value("${pedidos.rabbitmq.routingkey.tickets}")
-    private String ticketsRoutingKey;
-
+    // Inyectamos el RabbitTemplate mediante el constructor
     public PedidoProducerService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
+    
+    public void enviarPedidoACocina(PedidoMensajeDTO pedidoMensaje) {
+        logger.info("Enviando pedido ID: {} a la cola de cocina...", pedidoMensaje.getId()); // Asumiendo que tu DTO tiene getIdPedido()
+        
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.ROUTING_KEY_COCINA,
+                pedidoMensaje
+        );
+        
+        logger.info("✅ Pedido enviado a cocina exitosamente.");
+    }
 
     /**
-     * Publica el evento de nuevo pedido para que cocina y facturación lo procesen asíncronamente.
+     * Envía el DTO del pedido a la cola de tickets a través del Exchange.
      */
-    public void publicarNuevoPedido(Pedido pedido) {
-        int items = (pedido.getDetalles() != null) ? pedido.getDetalles().size() : 0;
-        PedidoMensajeDTO mensaje = new PedidoMensajeDTO(
-                pedido.getId(),
-                pedido.getUsername(),
-                pedido.getEstado(),
-                pedido.getTotal(),
-                items
+    public void enviarPedidoATicket(PedidoMensajeDTO pedidoMensaje) {
+        logger.info("Enviando pedido ID: {} a la cola de tickets...", pedidoMensaje.getId());
+        
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.ROUTING_KEY_TICKET,
+                pedidoMensaje
         );
+        
+        logger.info("✅ Pedido enviado a tickets exitosamente.");
+    }
+    public void publicarNuevoPedido(com.pedidos360_orders.ms_pedidos360_orders.model.Pedido pedido) {
+        logger.info("Transformando pedido ID: {} para envío a RabbitMQ...", pedido.getId());
 
-        logger.info("📤 Publicando evento de pedido #{} al exchange '{}' con routingKey '{}'",
-                pedido.getId(), pedidosExchange, cocinaRoutingKey);
+        // 1. Mapeamos la entidad Pedido al PedidoMensajeDTO
+        PedidoMensajeDTO dto = new PedidoMensajeDTO();
+        dto.setId(pedido.getId());
+        dto.setUsername(pedido.getUsername());
+        dto.setEstado(pedido.getEstado());
+        dto.setTotal(pedido.getTotal());
+        
+        // Calculamos la cantidad de items de forma segura
+        int cantidad = (pedido.getDetalles() != null) ? pedido.getDetalles().size() : 0;
+        dto.setCantidadItems(cantidad);
 
-        // Envío asíncrono a la cola de Cocina
-        rabbitTemplate.convertAndSend(pedidosExchange, cocinaRoutingKey, mensaje);
-
-        // Envío asíncrono a la cola de Tickets
-        logger.info("📤 Publicando pedido #{} para generación de ticket con routingKey '{}'",
-                pedido.getId(), ticketsRoutingKey);
-        rabbitTemplate.convertAndSend(pedidosExchange, ticketsRoutingKey, mensaje);
+        // 2. Disparamos los mensajes usando los métodos existentes
+        enviarPedidoACocina(dto);
+        enviarPedidoATicket(dto);
     }
 }

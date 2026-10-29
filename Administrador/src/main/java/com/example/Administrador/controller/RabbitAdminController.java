@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,5 +62,14 @@ public class RabbitAdminController {
     public ResponseEntity<Map<String, Object>> consultarCola(@PathVariable String nombre) {
         Map<String, Object> info = adminService.consultarCola(nombre);
         return ResponseEntity.ok(info);
+    }
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> listarTodasLasColas() {
+        List<Map<String, Object>> listaColas = adminService.listarTodasLasColas();
+        if (listaColas != null && !listaColas.isEmpty()) {
+            return ResponseEntity.ok(listaColas);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
     }
 }

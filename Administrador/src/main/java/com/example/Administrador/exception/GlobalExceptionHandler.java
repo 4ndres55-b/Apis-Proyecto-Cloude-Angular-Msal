@@ -11,11 +11,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Manejador global de excepciones para el microservicio Administrador.
- * Asegura que cualquier intento de crear colas con parámetros inválidos o nombres vacíos
- * devuelva una respuesta clara con código HTTP 400 Bad Request, según la pauta.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
