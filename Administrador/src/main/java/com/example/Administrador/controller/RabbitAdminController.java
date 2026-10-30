@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/colas")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS}, allowedHeaders = "*")
 public class RabbitAdminController {
 
     private final RabbitAdminService adminService;
@@ -28,11 +28,7 @@ public class RabbitAdminController {
         this.adminService = adminService;
     }
 
-    /**
-     * Endpoint para crear una cola.
-     * Valida los parámetros con DTO para evitar nombres vacíos (Criterio 7%).
-     */
-    @PostMapping
+    @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<RespuestaAdminDTO> crearCola(@Valid @RequestBody ColaRequestDTO request) {
         RespuestaAdminDTO respuesta = adminService.crearCola(request);
         if (respuesta.isExitoso()) {
@@ -71,5 +67,14 @@ public class RabbitAdminController {
         } else {
             return ResponseEntity.noContent().build();
         }
+    }
+
+    @GetMapping("/{nombre}/mensajes")
+    public ResponseEntity <List<Map<String, Object>>>leerMensajes(
+            @PathVariable String nombre,
+            @RequestParam(defaultValue = "10") int count) {
+        
+        List mensajes = adminService.leerMensajesDeCola(nombre, count);
+        return ResponseEntity.ok(mensajes);
     }
 }

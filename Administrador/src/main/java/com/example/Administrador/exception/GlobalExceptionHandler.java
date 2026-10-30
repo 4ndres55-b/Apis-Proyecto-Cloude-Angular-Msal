@@ -33,6 +33,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> manejarErrorGenerico(Exception ex) {
+        ex.printStackTrace(); 
+
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("timestamp", LocalDateTime.now());
         respuesta.put("codigo", HttpStatus.INTERNAL_SERVER_ERROR.value());

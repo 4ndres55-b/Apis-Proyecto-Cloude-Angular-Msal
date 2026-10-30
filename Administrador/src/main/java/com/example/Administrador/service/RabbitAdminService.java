@@ -2,6 +2,8 @@ package com.example.Administrador.service;
 
 import com.example.Administrador.dto.ColaRequestDTO;
 import com.example.Administrador.dto.RespuestaAdminDTO;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Queue;
@@ -11,11 +13,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.net.URI;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 
 @Service
@@ -114,4 +124,62 @@ public class RabbitAdminService {
             return Collections.emptyList();
         }
     }
+
+
+
+
+
+    public List<Map<String, Object>> leerMensajesDeCola(String nombreCola, int cantidadMensajes) {
+        logger.info("Leyendo {} mensajes de la cola {} sin consumirlos", cantidadMensajes, nombreCola);
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor("guest", "guest"));
+
+            String urlString = "http://" + rabbitmqHost + ":15672/api/queues/%2F/" + nombreCola + "/get";
+            URI uri = URI.create(urlString); // Convertimos el String a URI para que Spring no lo re-codifique
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("count", cantidadMensajes);
+            requestBody.put("ackmode", "ack_requeue_true"); 
+            requestBody.put("encoding", "auto");
+            requestBody.put("truncate", 50000);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity <Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<List> response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, List.class);
+
+
+            if (response.getBody() != null) {
+                List<Map<String, Object>> mensajesFormateados = new ArrayList<>();
+                
+                for (Object item : response.getBody()) {
+                    Map<String, Object> mensajeRaw = (Map<String, Object>) item;
+                    Map<String, Object> mensajeLimpio = new HashMap<>();
+                    
+                    // Extraemos las rutas
+                    mensajeLimpio.put("routing_key", mensajeRaw.get("routing_key"));
+                    mensajeLimpio.put("exchange", mensajeRaw.get("exchange"));
+                    
+                    // Extraemos el payload tal cual como viene (normalmente un String JSON)
+                    Object payload = mensajeRaw.get("payload");
+                    mensajeLimpio.put("contenido", payload);
+                    
+                    mensajesFormateados.add(mensajeLimpio);
+                }
+                return mensajesFormateados;
+            }
+            return Collections.emptyList();
+
+        } catch (Exception e) {
+            logger.error("Error al leer mensajes de la cola {}: {}", nombreCola, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+    
+
 }
+
+
+
